@@ -28,14 +28,19 @@ import {
   ArrowDownRight,
   Download
 } from 'lucide-react';
+import { getLocalStorageCache, setLocalStorageCache } from '../utils/cacheManager';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { transactions, loading, stats, fetchTransactions } = useTransactions();
   const { upcoming, upcomingSummary, fetchUpcoming } = useRecurring();
-  const [monthlyData, setMonthlyData] = useState([]);
-  const [chartsLoading, setChartsLoading] = useState(false);
   const { displayCurrency, setDisplayCurrency } = useCurrency();
+
+  const cacheKey = `dash_monthly_${displayCurrency}`;
+  const cachedMonthly = getLocalStorageCache(cacheKey);
+
+  const [monthlyData, setMonthlyData] = useState(cachedMonthly || []);
+  const [chartsLoading, setChartsLoading] = useState(!cachedMonthly);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportFilters, setExportFilters] = useState({});
 
@@ -63,10 +68,15 @@ export const Dashboard = () => {
     fetchUpcoming();
 
     const fetchMonthlyAnalytics = async () => {
-      setChartsLoading(true);
+      const currentCacheKey = `dash_monthly_${displayCurrency}`;
+      const localCache = getLocalStorageCache(currentCacheKey);
+      if (!localCache) {
+        setChartsLoading(true);
+      }
       try {
         const res = await api.get('/analytics/monthly', { params: { displayCurrency } });
         setMonthlyData(res.data.data);
+        setLocalStorageCache(currentCacheKey, res.data.data);
       } catch (err) {
         console.error('Failed to load monthly analytics charts data:', err);
       } finally {

@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { getLocalStorageCache, setLocalStorageCache } from '../utils/cacheManager';
 
 export const useRecurring = () => {
   const [rules, setRules] = useState([]);
@@ -17,15 +18,25 @@ export const useRecurring = () => {
 
   // 1. Fetch all recurring rules for the logged-in user
   const fetchRules = useCallback(async (options = {}) => {
-    setLoading(true);
+    const cachedRules = getLocalStorageCache('recurring_rules');
+    if (cachedRules && !options.skipCache) {
+      setRules(cachedRules);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     setError(null);
     try {
       const res = await api.get('/recurring', options);
       setRules(res.data.data);
+      setLocalStorageCache('recurring_rules', res.data.data);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to fetch recurring rules';
-      setError(msg);
-      toast.error(msg);
+      if (!cachedRules) {
+        const msg = err.response?.data?.message || 'Failed to fetch recurring rules';
+        setError(msg);
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -33,10 +44,17 @@ export const useRecurring = () => {
 
   // 2. Fetch upcoming recurring transactions for the next 30 days (Dashboard)
   const fetchUpcoming = useCallback(async () => {
+    const cachedUpcoming = getLocalStorageCache('recurring_upcoming');
+    if (cachedUpcoming) {
+      setUpcoming(cachedUpcoming.data || []);
+      setUpcomingSummary(cachedUpcoming.summary || { totalIncome: 0, totalExpense: 0 });
+    }
+
     try {
       const res = await api.get('/recurring/upcoming');
       setUpcoming(res.data.data);
       setUpcomingSummary(res.data.summary);
+      setLocalStorageCache('recurring_upcoming', { data: res.data.data, summary: res.data.summary });
     } catch (err) {
       console.error('Failed to load upcoming recurring transactions:', err.message);
     }

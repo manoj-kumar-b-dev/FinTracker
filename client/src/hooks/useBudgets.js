@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { getLocalStorageCache, setLocalStorageCache } from '../utils/cacheManager';
 
 export const useBudgets = () => {
   const [budgets, setBudgets] = useState([]);
@@ -15,15 +16,27 @@ export const useBudgets = () => {
 
   // 1. Fetch budgets for a given month/year
   const fetchBudgets = useCallback(async (params = {}) => {
-    setLoading(true);
+    const cacheKey = `budgets_${JSON.stringify(params)}`;
+    const cachedData = getLocalStorageCache(cacheKey);
+
+    if (cachedData) {
+      setBudgets(cachedData);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     setError(null);
     try {
       const res = await api.get('/budgets', { params });
       setBudgets(res.data.data);
+      setLocalStorageCache(cacheKey, res.data.data);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to fetch budgets';
-      setError(msg);
-      toast.error(msg);
+      if (!cachedData) {
+        const msg = err.response?.data?.message || 'Failed to fetch budgets';
+        setError(msg);
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -31,14 +44,26 @@ export const useBudgets = () => {
 
   // 2. Fetch budget utilization statuses
   const fetchBudgetStatus = useCallback(async (params = {}) => {
-    setLoading(true);
+    const cacheKey = `budgets_status_${JSON.stringify(params)}`;
+    const cachedStatus = getLocalStorageCache(cacheKey);
+
+    if (cachedStatus) {
+      setBudgetStatus(cachedStatus);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     setError(null);
     try {
       const res = await api.get('/budgets/status', { params });
       setBudgetStatus(res.data.data);
+      setLocalStorageCache(cacheKey, res.data.data);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to calculate budget status';
-      setError(msg);
+      if (!cachedStatus) {
+        const msg = err.response?.data?.message || 'Failed to calculate budget status';
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

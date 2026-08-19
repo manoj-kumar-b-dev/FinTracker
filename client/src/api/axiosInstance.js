@@ -5,6 +5,7 @@
 
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { clearLocalStorageCache } from '../utils/cacheManager';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -19,7 +20,7 @@ const api = axios.create({
 // Cache store & request deduplication maps
 const cacheStore = new Map();
 const pendingRequests = new Map();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache TTL
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes cache TTL
 
 /**
  * Clear all API response caches.
@@ -27,6 +28,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache TTL
 export const clearApiCache = () => {
   cacheStore.clear();
   pendingRequests.clear();
+  clearLocalStorageCache();
 };
 
 /**

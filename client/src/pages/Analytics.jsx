@@ -10,18 +10,25 @@ import { PieChartWrapper } from '../components/charts/PieChartWrapper';
 import { LineChartWrapper } from '../components/charts/LineChartWrapper';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import { BarChart, PieChart, Activity, TrendingUp } from 'lucide-react';
+import { getLocalStorageCache, setLocalStorageCache } from '../utils/cacheManager';
 
 export const Analytics = () => {
-  const [monthlyData, setMonthlyData] = useState([]);
-  const [categoryData, setCategoryData] = useState([]);
-  const [trendData, setTrendData] = useState([]);
+  const cachedMonthly = getLocalStorageCache('analytics_monthly');
+  const cachedCategory = getLocalStorageCache('analytics_category');
+  const cachedTrend = getLocalStorageCache('analytics_trend');
 
-  const [loading, setLoading] = useState(true);
+  const [monthlyData, setMonthlyData] = useState(cachedMonthly || []);
+  const [categoryData, setCategoryData] = useState(cachedCategory || []);
+  const [trendData, setTrendData] = useState(cachedTrend || []);
+
+  const [loading, setLoading] = useState(!cachedMonthly);
 
   // Fetch all analytics datasets on mount
   useEffect(() => {
     const fetchAnalyticsData = async () => {
-      setLoading(true);
+      if (!getLocalStorageCache('analytics_monthly')) {
+        setLoading(true);
+      }
       try {
         const [monthlyRes, categoryRes, trendRes] = await Promise.all([
           api.get('/analytics/monthly'),
@@ -32,6 +39,10 @@ export const Analytics = () => {
         setMonthlyData(monthlyRes.data.data);
         setCategoryData(categoryRes.data.data);
         setTrendData(trendRes.data.data);
+
+        setLocalStorageCache('analytics_monthly', monthlyRes.data.data);
+        setLocalStorageCache('analytics_category', categoryRes.data.data);
+        setLocalStorageCache('analytics_trend', trendRes.data.data);
       } catch (err) {
         console.error('Failed to load charts analytics datasets:', err);
       } finally {

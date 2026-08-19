@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import api from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { getLocalStorageCache, setLocalStorageCache } from '../utils/cacheManager';
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -16,7 +17,18 @@ export const useTransactions = () => {
 
   // 1. Fetch transactions with filters
   const fetchTransactions = useCallback(async (params = {}) => {
-    setLoading(true);
+    const cacheKey = `tx_${JSON.stringify(params)}`;
+    const cachedData = getLocalStorageCache(cacheKey);
+
+    if (cachedData) {
+      setTransactions(cachedData.data || []);
+      setPagination(cachedData.pagination || { total: 0, page: 1, pages: 1, limit: 10 });
+      setStats(cachedData.stats || { income: 0, expense: 0, balance: 0 });
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     setError(null);
     try {
       const res = await api.get('/transactions', { params });
@@ -24,10 +36,13 @@ export const useTransactions = () => {
       setTransactions(data);
       setPagination(pag);
       setStats(st);
+      setLocalStorageCache(cacheKey, { data, pagination: pag, stats: st });
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to fetch transactions';
-      setError(msg);
-      toast.error(msg);
+      if (!cachedData) {
+        const msg = err.response?.data?.message || 'Failed to fetch transactions';
+        setError(msg);
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
