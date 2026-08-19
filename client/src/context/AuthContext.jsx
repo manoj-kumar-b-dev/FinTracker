@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import api from '../api/axiosInstance';
+import api, { clearApiCache } from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 // 1. Initial State
@@ -145,6 +145,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Logout API failed:', err);
     } finally {
+      clearApiCache();
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       dispatch({ type: 'LOGOUT' });

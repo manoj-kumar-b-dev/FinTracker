@@ -218,7 +218,6 @@ export const App = () => {
                 </ProtectedRoute>
               }
             />
-
             {/* Fallback redirects */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

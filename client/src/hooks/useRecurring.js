@@ -16,11 +16,11 @@ export const useRecurring = () => {
   const [error, setError] = useState(null);
 
   // 1. Fetch all recurring rules for the logged-in user
-  const fetchRules = useCallback(async () => {
+  const fetchRules = useCallback(async (options = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get('/recurring');
+      const res = await api.get('/recurring', options);
       setRules(res.data.data);
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to fetch recurring rules';

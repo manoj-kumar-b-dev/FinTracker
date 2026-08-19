@@ -91,7 +91,7 @@ export const RecurringManager = () => {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={fetchRules}
+            onClick={() => fetchRules({ skipCache: true })}
             disabled={loading}
             title="Refresh"
             className="p-2.5 rounded-xl border border-gray-200/50 dark:border-gray-800/40 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
