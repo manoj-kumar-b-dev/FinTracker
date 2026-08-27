@@ -1,4 +1,4 @@
-# Aura Wealth — Premium MERN Stack Expense & Budget Tracker
+# FinTracker — Premium MERN Stack Expense & Budget Tracker
 
 A high-fidelity, production-ready **Expense Tracker** web application engineered with the MERN stack (MongoDB, Express, React, Node.js). Designed for optimal performance, detailed cash-flow analytics, precise budget pacing, secure authentication (JWT with secure HttpOnly cookies + Bearer tokens), input validation schemas, and high-performance streaming CSV exports.
 
